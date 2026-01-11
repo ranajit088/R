@@ -1,0 +1,19 @@
+
+# Ensure you have 'flutter_launcher_icons' in your pubspec.yaml dev_dependencies
+# Run: flutter pub run flutter_launcher_icons
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon/app_icon_r.png"
+  
+  # Android Adaptive Icons Support (API 26+)
+  adaptive_icon_background: "#312E81"
+  adaptive_icon_foreground: "assets/icon/r_foreground.png"
+  
+  # Web Support (Favicons and Manifest Icons)
+  web:
+    generate: true
+    image_path: "assets/icon/app_icon_r.png"
+    background_color: "#312E81"
+    theme_color: "#312E81"

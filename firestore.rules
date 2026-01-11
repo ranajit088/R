@@ -1,0 +1,70 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // --- Helper Functions ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // --- User Profiles ---
+    match /users/{userId} {
+      // Profiles are discoverable by any authenticated user
+      allow read: if isSignedIn();
+      // Only the specific user can update their own profile data
+      allow write: if isSignedIn() && isOwner(userId);
+    }
+
+    // --- Posts ---
+    match /posts/{postId} {
+      // Feed is public to all signed-in users
+      allow read: if isSignedIn();
+      
+      // Prevention of identity spoofing on creation
+      allow create: if isSignedIn() && 
+                    request.resource.data.user.id == request.auth.uid;
+      
+      // Only author can update or delete their content
+      allow update, delete: if isSignedIn() && 
+                            resource.data.user.id == request.auth.uid;
+    }
+
+    // --- Chat System (Private Messaging) ---
+    match /chatRooms/{roomId} {
+      // A user can only see or access rooms they are part of
+      allow read, write: if isSignedIn() && 
+                         request.auth.uid in resource.data.participants;
+
+      // Rules for the messages sub-collection inside each room
+      match /messages/{messageId} {
+        // Enforce that the user must be a participant in the parent room to read/write messages
+        allow read, write: if isSignedIn() && 
+                           request.auth.uid in get(/databases/$(database)/documents/chatRooms/$(roomId)).data.participants;
+      }
+    }
+
+    // --- Stories ---
+    match /stories/{storyId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && 
+                    request.resource.data.user.id == request.auth.uid;
+      allow delete: if isSignedIn() && 
+                    resource.data.user.id == request.auth.uid;
+    }
+
+    // --- Notifications ---
+    match /notifications/{notificationId} {
+      // Users can only see notifications sent specifically to them
+      allow read: if isSignedIn() && isOwner(resource.data.toUserId);
+      // Notifications can be created by the person performing the action (like/follow)
+      allow create: if isSignedIn() && isOwner(request.resource.data.fromUserId);
+      // Users can mark their own notifications as read
+      allow update: if isSignedIn() && isOwner(resource.data.toUserId);
+    }
+  }
+}

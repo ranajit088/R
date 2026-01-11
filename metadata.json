@@ -1,0 +1,8 @@
+{
+  "name": "R - Professional Network",
+  "description": "A high-fidelity professional social media application featuring a news feed, stories, smart content generation with Gemini, and a responsive mobile-first UI.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
